@@ -5,12 +5,12 @@ import imutils
 from imutils import perspective
 
 def tumor_part(cnt,area,solidity):
-    if solidity>0.4 and area>100:
+    if solidity>0.4 and area>2000:
         return True
     else:
         return False
 
-img = cv2.imread("Datasets/tumors/tumor8.jpg")
+img = cv2.imread("Datasets/tumors/tumor6.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 gray = clahe.apply(gray)
@@ -58,6 +58,8 @@ plt.subplot(122),plt.imshow(dilation)
 plt.title('Tumor Brain')
 plt.suptitle("Brain Tumor Detection Using Image Processing")
 plt.show()
+
+cv2.imwrite("Results/result1.jpg",img)
 
 # plt.subplot(121),plt.imshow(res)
 # plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
