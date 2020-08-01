@@ -1,17 +1,19 @@
 import cv2
 import numpy as np
-img = cv2.imread("Datasets/tumors/tumor12.jpg",0)
+import imutils
 
-Z = img.reshape((-1,1))
-Z = np.float32(Z)
+img = cv2.imread("Datasets/tumors/kmean.jpg",0)
+ret,thresh = cv2.threshold(img,83,255,cv2.THRESH_BINARY)
+cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+cnts = imutils.grab_contours(cnts)
 
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
-K = 16
-ret,label,center=cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
+img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-center = np.uint8(center)
-res = center[label.flatten()]
-res2 = res.reshape((img.shape))
-cv2.imshow('res2',res2)
+for (i,c) in enumerate(cnts):
+    if cv2.contourArea(c)>1000:
+        cv2.drawContours(img, [c], -1, (1,255,11), 1)
+print(len(cnts))
+cv2.imshow("Image",img)
+
 cv2.waitKey(0)
 cv2.destroyAllWindows()

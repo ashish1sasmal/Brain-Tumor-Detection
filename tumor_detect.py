@@ -19,9 +19,7 @@ def tumor_part(c):
         solidity = float(area)/hull_area
     else:
         solidity=0
-    print(solidity,area)
-    if solidity>0.5 and area>300:
-        # print(area)
+    if solidity>0.7 and area>2000:
         return True
     else:
         return False
@@ -45,7 +43,6 @@ def threshold(img,b):
     # erosion = cv2.erode(thresh,kernel,iterations = 1)
     # dilation = cv2.dilate(erosion,kernel,iterations = 1)
     dilation = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-    dilation = cv2.dilate(dilation,kernel,iterations = 1)
 
     return dilation
 
@@ -57,44 +54,25 @@ def contours(img2):
 def RGB(img):
     return cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 
-def k_means(img):
-    Z = img.reshape((-1,1))
-    Z = np.float32(Z)
-
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    K = 8
-    ret,label,center=cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
-
-    center = np.uint8(center)
-    res = center[label.flatten()]
-    res2 = res.reshape((img.shape))
-    return res2
 
 
 def process(img3,b):
     gray = cv2.cvtColor(img3, cv2.COLOR_BGR2GRAY)
     blur = blur_image(gray)
-    # cont = enhance(blur)
-    # cont = enhance(cont)
+    cont = enhance(blur)
+    cont = enhance(cont)
+    thresh = threshold(cont,b)
 
-    # thresh = threshold(cont,b)
-    thresh = k_means(blur)
-    cv2.imwrite("Datasets/tumors/kmean.jpg",thresh)
     mask = np.ones(img3.shape[:2], dtype="uint8") * 255
     cnts = contours(thresh)
-    print(len(cnts))
     dilation = RGB(thresh)
     for (i,c) in enumerate(cnts):
-        tumor_part(c)
-        cv2.drawContours(img3, [c], -1, (1,255,11), 2)
-        cv2.drawContours(dilation, [c], -1, (0,0,254), 2)
-
-        # if tumor_part(c):
-        #     # print("so",area,solidity)
-        #     cv2.drawContours(img3, [c], -1, (1,255,11), 2)
-        #     cv2.drawContours(dilation, [c], -1, (0,0,254), 2)
-        # else:
-        #     cv2.drawContours(mask, [c], -1, 0, -1)
+        if tumor_part(c):
+            # print("so",area,solidity)
+            cv2.drawContours(img3, [c], -1, (1,255,11), 2)
+            cv2.drawContours(dilation, [c], -1, (0,0,254), 2)
+        else:
+            cv2.drawContours(mask, [c], -1, 0, -1)
 
 
     dilation = cv2.bitwise_and(dilation, dilation, mask=mask)
@@ -108,20 +86,20 @@ img, dilation = process(img1,220)
 res =  np.hstack((org,img, dilation))
 cv2.imshow("image",res)
 
-# cv2.createTrackbar('Intensity','image',220,240,nothing)
+cv2.createTrackbar('Intensity','image',220,240,nothing)
 
-# while True:
-#     b =  cv2.getTrackbarPos('Intensity','image')
-#     img, dilation = process(img1,b)
-#     res =  np.hstack((org,img, dilation))
-#
-#     cv2.imwrite("Results/result2.jpg",res)
-#     cv2.imshow("image",res)
-#     img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
-#     org = img1.copy()
-#     k = cv2.waitKey(1) & 0xFF
-#     if k == ord('q'):
-#         break
+while True:
+    b =  cv2.getTrackbarPos('Intensity','image')
+    img, dilation = process(img1,b)
+    res =  np.hstack((org,img, dilation))
+
+    cv2.imwrite("Results/result2.jpg",res)
+    cv2.imshow("image",res)
+    img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
+    org = img1.copy()
+    k = cv2.waitKey(1) & 0xFF
+    if k == ord('q'):
+        break
 
 # plt.subplot(121),plt.imshow(res)
 # plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
@@ -146,5 +124,5 @@ cv2.imshow("image",res)
 
 # cv2.imshow("Br",img)
 #
-cv2.waitKey(0)
+# cv2.waitKey(0)
 cv2.destroyAllWindows()
