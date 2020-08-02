@@ -19,7 +19,7 @@ def tumor_part(c):
         solidity = float(area)/hull_area
     else:
         solidity=0
-    print(solidity,area)
+    # print(solidity,area)
     if solidity>0.5 and area>2000:
         # print(area)
         return True
@@ -51,19 +51,21 @@ def threshold(img,b):
 
     return thresh
 
-def contours(img2):
+def contours(img,org,b):
     # emg2=enhance(img2)
-    img2 = threshold(img2,110)
-
+    img2 = threshold(img,b)
     cnts = cv2.findContours(img2.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
-    print(len(cnts))
+    # print(len(cnts))
     img2 = RGB(img2)
+    org = RGB(org)
     for (i,c) in enumerate(cnts):
         if tumor_part(c):
             # print("so",area,solidity)
+            cv2.drawContours(org, [c], -1, (1,255,11), 2)
             cv2.drawContours(img2, [c], -1, (1,255,11), 2)
-    return img2
+
+    return (org,img2)
 
 def RGB(img):
     return cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -84,36 +86,40 @@ def k_means(img):
 def edge_ex(img):
     return cv2.Canny(img,100,200)
 
+def show_images(gray,blur,seg,cont_org,cont_mask):
+    res1 =  np.hstack((blur,seg))
+    res2 =  np.hstack((cont_org,cont_mask))
+    res = np.vstack((res1,res2))
+    cv2.imwrite("Results/result_kmean.jpg",res)
+    cv2.imshow("image",res)
+
 def process(img3,b):
     gray = cv2.cvtColor(img3, cv2.COLOR_BGR2GRAY)
     blur = blur_image(gray)
     seg = k_means(blur)
-    cont = contours(seg)
+    cont_org, cont_mask = contours(seg,gray,b)
     seg = RGB(seg)
-    return (seg,cont)
+    blur = RGB(blur)
+    gray = RGB(gray)
+    show_images(gray,blur,seg,cont_org,cont_mask)
 
 
 
 img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
 org = img1.copy()
-img, res = process(img1,220)
-res =  np.hstack((img, res))
-cv2.imshow("image",res)
+process(img1,120)
 
-# cv2.createTrackbar('Intensity','image',220,240,nothing)
 
-# while True:
-#     b =  cv2.getTrackbarPos('Intensity','image')
-#     img, dilation = process(img1,b)
-#     res =  np.hstack((org,img, dilation))
-#
-#     cv2.imwrite("Results/result2.jpg",res)
-#     cv2.imshow("image",res)
-#     img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
-#     org = img1.copy()
-#     k = cv2.waitKey(1) & 0xFF
-#     if k == ord('q'):
-#         break
+
+cv2.createTrackbar('Intensity','image',220,240,nothing)
+
+while True:
+    b =  cv2.getTrackbarPos('Intensity','image')
+    process(img1,b)
+    img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
+    k = cv2.waitKey(1) & 0xFF
+    if k == ord('q'):
+        break
 
 # plt.subplot(121),plt.imshow(res)
 # plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
@@ -138,5 +144,5 @@ cv2.imshow("image",res)
 
 # cv2.imshow("Br",img)
 #
-cv2.waitKey(0)
+# cv2.waitKey(0)
 cv2.destroyAllWindows()
