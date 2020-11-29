@@ -105,18 +105,18 @@ def process(img3,b):
 
 
 
-img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
+img1 = cv2.imread(f"Datasets/brain_tumor_dataset/yes/{sys.argv[1]}")
 org = img1.copy()
 process(img1,120)
 
 
 
-cv2.createTrackbar('Intensity','image',220,240,nothing)
+cv2.createTrackbar('Intensity','image',130,240,nothing)
 
 while True:
     b =  cv2.getTrackbarPos('Intensity','image')
     process(img1,b)
-    img1 = cv2.imread(f"Datasets/tumors/{sys.argv[1]}")
+    img1 = cv2.imread(f"Datasets/brain_tumor_dataset/yes/{sys.argv[1]}")
     k = cv2.waitKey(1) & 0xFF
     if k == ord('q'):
         break
